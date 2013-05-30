@@ -1,9 +1,13 @@
 <?php
-define('IMAGE_WIDTH', 1500);
-define('IMAGE_HEIGHT', 500);
+define('IMAGE_WIDTH', 1600);
+define('IMAGE_HEIGHT', 600);
 define('SHOW_MEDIAN_AVERAGE', 0);
 define('SHOW_MEDIAN_LAST5', TRUE);
 
+/*
+ * Get data array from DB
+ * Default all items if `last` not set
+ */
 function get_data(){
     include_once 'config.php';
     global $CONFIG;
@@ -25,6 +29,9 @@ function get_data(){
     return $result;
 }
 
+/*
+ * Random data for test
+ */
 function get_test_data(){
     $result = array();
     $date = new DateTime('2013-01-01');
@@ -41,6 +48,9 @@ function get_test_data(){
     return $result;
 }
 
+/*
+ * Processing data, creating array of points and building image
+ */
 function build_image(){
     $width = IMAGE_WIDTH;
     $height = IMAGE_HEIGHT;
@@ -77,7 +87,6 @@ function build_image(){
     }
     
     $average = $total / sizeof($data);
-
     
     for($i=0;$i<sizeof($data);$i++){
         $data[$i]{'date'} = $fix_dates[$i];
@@ -146,7 +155,6 @@ function build_graphic($points, $data, $im){
                 }
                 imageline($im, $points[$i]['x'], $y1, $points[$i+1]['x'], $y2, $med);
                 imagerectangle($im, $points[$i]['x']-2, $y1-2, $points[$i]['x']+2, $y1+2, $med);
-
                 
             }
         }        
@@ -192,7 +200,6 @@ function build_grid($rows, $columns, $image){
         $y = $offset_h + $i/$columns*$height;
         imageline($image, $offset_w, $y, $offset_w+$width, $y, $grid_color);
     }
-
 }
 
 build_image();
