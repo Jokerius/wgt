@@ -4,6 +4,16 @@ define('IMAGE_HEIGHT', 600);
 define('SHOW_MEDIAN_AVERAGE', 0);
 define('SHOW_MEDIAN_LAST5', TRUE);
 
+$width = IMAGE_WIDTH;
+$height = IMAGE_HEIGHT;
+
+global $width, $height, $offset_w, $offset_h;
+
+$offset_w = round(0.03*$width);
+$offset_h = round(0.05*$height);
+$width = round(0.94*$width);
+$height = round(0.9*$height);
+
 /*
  * Get data array from DB
  * Default all items if `last` not set
@@ -56,19 +66,16 @@ function build_image(){
     $height = IMAGE_HEIGHT;
     $im = imagecreatetruecolor($width, $height);
     
-    $offset_w = round(0.03*$width);
-    $offset_h = round(0.05*$height);
-    $width = round(0.94*$width);
-    $height = round(0.9*$height);
-    
-    
+    global $width, $height, $offset_w, $offset_h;
+     
     $background = imagecolorallocate($im, 10, 10, 10);
-     imagefilledrectangle($im , 0, 0, IMAGE_WIDTH, IMAGE_HEIGHT , $background );
+    imagefilledrectangle($im , 0, 0, IMAGE_WIDTH, IMAGE_HEIGHT , $background );
 
     $data = get_data();
 
     $min_date = $data[0]['date'];
     $max_date = $data[sizeof($data)-1]['date'];
+    
 
     $min_w = $data[0]['weight'];
     $max_w = $data[0]['weight'];
@@ -89,17 +96,17 @@ function build_image(){
     $average = $total / sizeof($data);
     
     for($i=0;$i<sizeof($data);$i++){
-        $data[$i]{'date'} = $fix_dates[$i];
+        $data[$i]{'fix_date'} = $fix_dates[$i];
     }
     
-    build_grid($data[sizeof($data)-1]['date'], round(($max_w - $min_w)*10), $im);
+    build_grid($data[sizeof($data)-1]['fix_date'], round(($max_w - $min_w)*10), $im);
     
-    draw_average_line($average, $width, $height, $max_w, $min_w, $offset_w, $offset_h, $im);
+    draw_average_line($average, $max_w, $min_w, $im);
 
     $points = array();
     foreach($data as $row){
         $points[] = array(
-            'x' => round($row['date'] * $width / ((strtotime($max_date) - strtotime($min_date))/86400)) + $offset_w,
+            'x' => round($row['fix_date'] * $width / ((strtotime($max_date) - strtotime($min_date))/86400)) + $offset_w,
             'y' => $height - round(($row['weight']-$min_w) * $height / ($max_w - $min_w)) + $offset_h
         );
 
@@ -116,17 +123,31 @@ function build_image(){
  * Builds graphic 
  */
 function build_graphic($points, $data, $im){
+    global $width, $height, $offset_w, $offset_h;
+    
     $color = imagecolorallocate($im, 0, 255, 100);
     $gross = imagecolorallocate($im, 0, 100, 255);
     $med = imagecolorallocate($im, 150, 100, 200);            
-    
+    $distance = 500;
     for($i=0;$i<sizeof($points);$i++){       
         imagerectangle($im, $points[$i]['x']-2, $points[$i]['y']-2, $points[$i]['x']+2, $points[$i]['y']+2, $color);
         imagestring($im, 2, $points[$i]['x']-30 , $points[$i]['y'], $data[$i]['weight'] ,$color);
+        
+        //date in the bottom
+
+        if($distance > 200){
+            imageline($im, $points[$i]['x'], $height+$offset_h, $points[$i]['x'], $height+$offset_h+10, $color);
+            imagestring($im, 2, $points[$i]['x']-30 , $height+$offset_h + 12, $data[$i]['date'] ,$color);
+            $distance = 0;
+        }
+        
+        $distance += $points[$i+1]['x']-$points[$i]['x'];
+        
         if(isset($points[$i+1])){
             imageline($im, $points[$i]['x'], $points[$i]['y'], $points[$i+1]['x'], $points[$i+1]['y'], $color);
 
             $sum += $points[$i]['y'];
+            
             if(SHOW_MEDIAN_AVERAGE ){
                 imageline($im, $points[$i]['x'], $sum/($i+1), $points[$i+1]['x'], ($sum+$points[$i+1]['y'])/($i+2), $gross);
                 imagerectangle($im, $points[$i]['x']-2, $sum/($i+1)-2, $points[$i]['x']+2, $sum/($i+1)+2, $gross);
@@ -154,8 +175,7 @@ function build_graphic($points, $data, $im){
                     $y2 = $sum2 / ($j);
                 }
                 imageline($im, $points[$i]['x'], $y1, $points[$i+1]['x'], $y2, $med);
-                imagerectangle($im, $points[$i]['x']-2, $y1-2, $points[$i]['x']+2, $y1+2, $med);
-                
+                imagerectangle($im, $points[$i]['x']-2, $y1-2, $points[$i]['x']+2, $y1+2, $med);                
             }
         }        
     }
@@ -164,7 +184,9 @@ function build_graphic($points, $data, $im){
 /*
  * Draws red line to show average value
  */
-function draw_average_line($average, $width, $height, $max_w, $min_w, $offset_w, $offset_h, $im){
+function draw_average_line($average, $max_w, $min_w, $im){
+    
+    global $width, $height, $offset_w, $offset_h;
     $red = imagecolorallocate($im, 220, 0, 200);
     $y = $height - ($average - $min_w) * $height / ($max_w - $min_w) + $offset_h;
     imageline($im, $offset_w, $y, $offset_w + $width, $y, $red);    
@@ -176,13 +198,7 @@ function draw_average_line($average, $width, $height, $max_w, $min_w, $offset_w,
  */
 function build_grid($rows, $columns, $image){
 
-    $width = IMAGE_WIDTH;
-    $height = IMAGE_HEIGHT;
-    
-    $offset_w = round(0.03*$width);
-    $offset_h = round(0.05*$height);
-    $width = round(0.94*$width);
-    $height = round(0.9*$height);
+    global $width, $height, $offset_w, $offset_h;
     
     $grid_color = imagecolorallocate($image, 90, 90, 90);
     $grid_light_color = imagecolorallocate($image, 120, 120, 120);
