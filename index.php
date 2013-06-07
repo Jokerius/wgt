@@ -1,6 +1,6 @@
 <?php
-define('IMAGE_WIDTH', 1600);
-define('IMAGE_HEIGHT', 600);
+define('IMAGE_WIDTH', 1850);
+define('IMAGE_HEIGHT', 750);
 define('SHOW_MEDIAN_AVERAGE', 0);
 define('SHOW_MEDIAN_LAST5', TRUE);
 
@@ -24,7 +24,7 @@ function get_data(){
     try{
         $db = new PDO('mysql:host='.$CONFIG['dbhost'].';dbname='.$CONFIG['dbname'].';charset=utf8', $CONFIG['dbuser'], $CONFIG['dbpass']);
         
-        if(intval($_GET['last']>0)){
+        if(intval($_GET['last'])>1){
             $stmt = $db->query("SELECT date, weight FROM graph order by date DESC limit ".intval($_GET['last']));
             $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
             $result = array_reverse($result);
@@ -135,7 +135,7 @@ function build_graphic($points, $data, $im){
         
         //date in the bottom
 
-        if($distance > 200){
+        if($distance > 100){
             imageline($im, $points[$i]['x'], $height+$offset_h, $points[$i]['x'], $height+$offset_h+10, $color);
             imagestring($im, 2, $points[$i]['x']-30 , $height+$offset_h + 12, $data[$i]['date'] ,$color);
             $distance = 0;
