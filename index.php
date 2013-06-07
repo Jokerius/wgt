@@ -129,9 +129,11 @@ function build_graphic($points, $data, $im){
     $gross = imagecolorallocate($im, 0, 100, 255);
     $med = imagecolorallocate($im, 150, 100, 200);            
     $distance = 500;
-    for($i=0;$i<sizeof($points);$i++){       
-        imagerectangle($im, $points[$i]['x']-2, $points[$i]['y']-2, $points[$i]['x']+2, $points[$i]['y']+2, $color);
-        imagestring($im, 2, $points[$i]['x']-30 , $points[$i]['y'], $data[$i]['weight'] ,$color);
+    for($i=0;$i<sizeof($points);$i++){
+        if($_GET['nogr']<>1){
+            imagerectangle($im, $points[$i]['x']-2, $points[$i]['y']-2, $points[$i]['x']+2, $points[$i]['y']+2, $color);
+            imagestring($im, 2, $points[$i]['x']-30 , $points[$i]['y'], $data[$i]['weight'] ,$color);
+        }
         
         //date in the bottom
 
@@ -143,8 +145,10 @@ function build_graphic($points, $data, $im){
         
         $distance += $points[$i+1]['x']-$points[$i]['x'];
         
-        if(isset($points[$i+1])){
-            imageline($im, $points[$i]['x'], $points[$i]['y'], $points[$i+1]['x'], $points[$i+1]['y'], $color);
+        if(isset($points[$i+1])){            
+            if($_GET['nogr']<>1){
+                imageline($im, $points[$i]['x'], $points[$i]['y'], $points[$i+1]['x'], $points[$i+1]['y'], $color);
+            }
 
             $sum += $points[$i]['y'];
             
@@ -155,8 +159,7 @@ function build_graphic($points, $data, $im){
             }
             
             if(SHOW_MEDIAN_LAST5){
-                //$y1 = ($points[$i]['y']+$points[$i-1]['y']+$points[$i-2]['y']+$points[$i-3]['y']+$points[$i-4]['y'])/5;
-                //$y2 = ($points[$i+1]['y']+$points[$i]['y']+$points[$i-1]['y']+$points[$i-2]['y']+$points[$i-3]['y'])/5;
+
                 $j=0;
                 $sum1 = 0;
                 $sum2 = 0;
