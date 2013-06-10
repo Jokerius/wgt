@@ -4,15 +4,19 @@ define('IMAGE_HEIGHT', 750);
 define('SHOW_MEDIAN_AVERAGE', 0);
 define('SHOW_MEDIAN_LAST5', TRUE);
 
-$width = IMAGE_WIDTH;
-$height = IMAGE_HEIGHT;
+$orig_width = IMAGE_WIDTH;
+$orig_height = IMAGE_HEIGHT;
+
+if($_GET['wid'] > 500 && $_GET['wid'] < 10915){
+    $orig_width = $_GET['wid'];
+}
 
 global $width, $height, $offset_w, $offset_h;
 
-$offset_w = round(0.03*$width);
-$offset_h = round(0.05*$height);
-$width = round(0.94*$width);
-$height = round(0.9*$height);
+$offset_w = round(0.03*$orig_width);
+$offset_h = round(0.05*$orig_height);
+$width = round(0.94*$orig_width);
+$height = round(0.9*$orig_height);
 
 /*
  * Get data array from DB
@@ -61,15 +65,13 @@ function get_test_data(){
 /*
  * Processing data, creating array of points and building image
  */
-function build_image(){
-    $width = IMAGE_WIDTH;
-    $height = IMAGE_HEIGHT;
-    $im = imagecreatetruecolor($width, $height);
+function build_image(){    
+    global $width, $height, $offset_w, $offset_h, $orig_width, $orig_height;
     
-    global $width, $height, $offset_w, $offset_h;
+    $im = imagecreatetruecolor($orig_width, $orig_height);    
      
     $background = imagecolorallocate($im, 10, 10, 10);
-    imagefilledrectangle($im , 0, 0, IMAGE_WIDTH, IMAGE_HEIGHT , $background );
+    imagefilledrectangle($im , 0, 0, $orig_width, $orig_height , $background);
 
     $data = get_data();
 
@@ -152,7 +154,7 @@ function build_graphic($points, $data, $im){
 
             $sum += $points[$i]['y'];
             
-            if(SHOW_MEDIAN_AVERAGE ){
+            if(SHOW_MEDIAN_AVERAGE){
                 imageline($im, $points[$i]['x'], $sum/($i+1), $points[$i+1]['x'], ($sum+$points[$i+1]['y'])/($i+2), $gross);
                 imagerectangle($im, $points[$i]['x']-2, $sum/($i+1)-2, $points[$i]['x']+2, $sum/($i+1)+2, $gross);
                 
